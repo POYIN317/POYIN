@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>星願抽獎所</title>
+	<style>
+		:root {
+			--ink: #172a3a;
+			--muted: #71808c;
+			--paper: #fffdf8;
+			--coral: #ef6b5b;
+			--yellow: #f5c44f;
+			--mint: #9ad8c7;
+			--blue: #b9ddec;
+			--line: #dfddd3;
+			--shadow: 0 18px 50px rgba(23, 42, 58, .12);
+		}
+
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			min-height: 100vh;
+			color: var(--ink);
+			background: #f3efe5;
+			font-family: Georgia, "Noto Serif TC", "Times New Roman", serif;
+		}
+		body::before {
+			position: fixed;
+			inset: 0;
+			z-index: -1;
+			content: "";
+			opacity: .55;
+			background-image: radial-gradient(#d6cfc0 1px, transparent 1px);
+			background-size: 18px 18px;
+			mask-image: linear-gradient(to bottom, black, transparent 80%);
+		}
+		button, textarea { font: inherit; }
+		button { cursor: pointer; }
+		.shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 50px; }
+		header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+		.eyebrow { margin: 0 0 7px; color: var(--coral); font: 700 12px/1.2 Arial, sans-serif; letter-spacing: .18em; }
+		h1 { margin: 0; font-size: clamp(35px, 6vw, 66px); line-height: .98; letter-spacing: -.045em; }
+		.intro { max-width: 275px; margin: 0; color: var(--muted); font: 14px/1.7 Arial, sans-serif; }
+		.layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(290px, .8fr); gap: 22px; align-items: start; }
+		.stage, .panel { border: 1px solid rgba(223, 221, 211, .9); background: rgba(255, 253, 248, .88); box-shadow: var(--shadow); }
+		.stage { min-height: 600px; padding: clamp(22px, 5vw, 54px); overflow: hidden; position: relative; }
+		.stage::after { position: absolute; width: 210px; height: 210px; right: -72px; top: -74px; border: 24px solid var(--yellow); border-radius: 50%; content: ""; opacity: .7; }
+		.stage-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; font: 700 12px Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+		.status { display: inline-flex; align-items: center; gap: 8px; }
+		.status::before { width: 8px; height: 8px; background: var(--mint); border-radius: 50%; content: ""; }
+		.status.drawing::before { background: var(--coral); animation: blink .55s infinite alternate; }
+		.counter { color: var(--muted); }
+		.draw-area { position: relative; z-index: 1; min-height: 385px; display: grid; place-items: center; text-align: center; }
+		.draw-area::before { position: absolute; width: min(31vw, 300px); aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; content: ""; }
+		.draw-area::after { position: absolute; width: min(25vw, 238px); aspect-ratio: 1; border: 1px dashed #d9c9ac; border-radius: 50%; content: ""; }
+		.winner { position: relative; z-index: 2; max-width: 90%; font-size: clamp(43px, 8vw, 86px); line-height: 1; letter-spacing: -.06em; word-break: break-word; }
+		.winner small { display: block; margin-top: 15px; color: var(--coral); font: 700 11px Arial, sans-serif; letter-spacing: .2em; }
+		.winner.rolling { animation: float .16s ease-in-out infinite alternate; }
+		.draw-button { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 12px; width: min(100%, 360px); min-height: 66px; margin: 0 auto; border: 0; border-radius: 100px; color: white; background: var(--coral); box-shadow: 0 10px 0 #c95045, 0 18px 25px rgba(201, 80, 69, .22); font-weight: 700; font-size: 20px; transition: transform .15s, box-shadow .15s; }
+		.draw-button:hover { transform: translateY(-3px); box-shadow: 0 13px 0 #c95045, 0 21px 28px rgba(201, 80, 69, .24); }
+		.draw-button:active { transform: translateY(6px); box-shadow: 0 4px 0 #c95045; }
+		.draw-button:disabled { cursor: wait; opacity: .72; }
+		.ticket { font-size: 25px; }
+		.panel { padding: 23px; }
+		.panel + .panel { margin-top: 22px; }
+		.panel h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: -.03em; }
+		.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+		.count { color: var(--coral); font: 700 12px Arial, sans-serif; }
+		textarea { display: block; width: 100%; min-height: 142px; padding: 13px; resize: vertical; border: 1px solid var(--line); border-radius: 2px; color: var(--ink); background: #fff; font: 15px/1.7 Arial, sans-serif; outline: none; }
+		textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(239, 107, 91, .12); }
+		.helper { margin: 9px 0 0; color: var(--muted); font: 12px/1.5 Arial, sans-serif; }
+		.secondary { width: 100%; margin-top: 15px; padding: 12px; border: 1px solid var(--ink); color: var(--ink); background: transparent; font: 700 13px Arial, sans-serif; transition: background .15s; }
+		.secondary:hover { background: var(--blue); }
+		.winner-list { display: grid; gap: 9px; max-height: 248px; overflow-y: auto; padding-right: 4px; }
+		.winner-item { display: flex; align-items: center; gap: 11px; padding: 9px 10px; background: #f8f5ed; font-size: 16px; animation: reveal .35s both; }
+		.medal { width: 26px; height: 26px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; color: white; background: var(--coral); font: 700 11px Arial, sans-serif; }
+		.empty { color: var(--muted); font: 13px/1.6 Arial, sans-serif; }
+		@keyframes float { to { transform: translateY(-7px) rotate(1deg); } }
+		@keyframes blink { to { opacity: .25; } }
+		@keyframes reveal { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+		@media (max-width: 760px) {
+			.shell { width: min(100% - 22px, 560px); padding-top: 22px; }
+			header { display: block; }
+			.intro { margin-top: 15px; max-width: none; }
+			.layout { grid-template-columns: 1fr; }
+			.stage { min-height: 530px; padding: 23px 18px; }
+			.draw-area { min-height: 335px; }
+			.draw-area::before { width: 270px; }
+			.draw-area::after { width: 212px; }
+		}
+	</style>
+</head>
+<body>
+	<main class="shell">
+		<header>
+			<div>
+				<p class="eyebrow">POYIN PRESENTS / 01</p>
+				<h1>星願抽獎所</h1>
+			</div>
+			<p class="intro">把名字交給一點點命運。<br>每一次點擊，都是全新的驚喜。</p>
+		</header>
+
+		<div class="layout">
+			<section class="stage" aria-live="polite">
+				<div class="stage-top">
+					<span class="status" id="status">準備好了</span>
+					<span class="counter" id="counter">0 位候選人</span>
+				</div>
+				<div class="draw-area">
+					<div class="winner" id="winner">誰會是幸運兒？<small>READY WHEN YOU ARE</small></div>
+				</div>
+				<button class="draw-button" id="drawButton" type="button"><span class="ticket">✦</span> 開始抽獎</button>
+			</section>
+
+			<aside>
+				<section class="panel">
+					<div class="panel-head"><h2>候選名單</h2><span class="count" id="nameCount">0 人</span></div>
+					<textarea id="names" aria-label="候選名單" placeholder="一行一個名字，例如：&#10;小明&#10;小美&#10;阿杰"></textarea>
+					<p class="helper">每行一位，重複名字會自動合併。</p>
+					<button class="secondary" id="resetButton" type="button">清除所有紀錄</button>
+				</section>
+				<section class="panel">
+					<div class="panel-head"><h2>幸運名單</h2><span class="count" id="winCount">0 位</span></div>
+					<div class="winner-list" id="winnerList"><p class="empty">抽出第一位幸運兒後，名單會出現在這裡。</p></div>
+				</section>
+			</aside>
+		</div>
+	</main>
+
+	<script>
+		const namesInput = document.querySelector('#names');
+		const drawButton = document.querySelector('#drawButton');
+		const resetButton = document.querySelector('#resetButton');
+		const winner = document.querySelector('#winner');
+		const status = document.querySelector('#status');
+		const counter = document.querySelector('#counter');
+		const nameCount = document.querySelector('#nameCount');
+		const winCount = document.querySelector('#winCount');
+		const winnerList = document.querySelector('#winnerList');
+		let winners = [];
+		let isDrawing = false;
+
+		function getNames() {
+			return [...new Set(namesInput.value.split(/\n|,/).map(name => name.trim()).filter(Boolean))];
+		}
+
+		function updateCounts() {
+			const count = getNames().length;
+			counter.textContent = `${count} 位候選人`;
+			nameCount.textContent = `${count} 人`;
+		}
+
+		function renderWinners() {
+			winCount.textContent = `${winners.length} 位`;
+			winnerList.innerHTML = winners.length ? winners.map((name, index) => `
+				<div class="winner-item"><span class="medal">${index + 1}</span><span>${name}</span></div>
+			`).join('') : '<p class="empty">抽出第一位幸運兒後，名單會出現在這裡。</p>';
+		}
+
+		function finishDraw(name) {
+			winners.push(name);
+			winner.classList.remove('rolling');
+			winner.innerHTML = `${name}<small>CONGRATULATIONS</small>`;
+			status.textContent = '抽獎完成';
+			drawButton.disabled = false;
+			isDrawing = false;
+			renderWinners();
+		}
+
+		function draw() {
+			if (isDrawing) return;
+			const available = getNames().filter(name => !winners.includes(name));
+			if (!available.length) {
+				status.textContent = getNames().length ? '名單已抽完' : '請先加入名單';
+				winner.innerHTML = getNames().length ? '全部揭曉了！<small>THE END</small>' : '還沒有候選人<small>ADD SOME NAMES</small>';
+				return;
+			}
+			isDrawing = true;
+			drawButton.disabled = true;
+			status.textContent = '命運轉動中';
+			winner.classList.add('rolling');
+			let ticks = 0;
+			const roll = setInterval(() => {
+				winner.innerHTML = `${available[Math.floor(Math.random() * available.length)]}<small>DRAWING...</small>`;
+				ticks += 1;
+				if (ticks > 14) {
+					clearInterval(roll);
+					finishDraw(available[Math.floor(Math.random() * available.length)]);
+				}
+			}, 105);
+		}
+
+		namesInput.addEventListener('input', updateCounts);
+		drawButton.addEventListener('click', draw);
+		resetButton.addEventListener('click', () => {
+			winners = [];
+			namesInput.value = '';
+			winner.innerHTML = '誰會是幸運兒？<small>READY WHEN YOU ARE</small>';
+			status.textContent = '準備好了';
+			renderWinners();
+			updateCounts();
+		});
+		updateCounts();
+	</script>
+</body>
+</html>
